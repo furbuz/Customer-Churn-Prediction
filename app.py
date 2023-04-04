@@ -11,9 +11,10 @@ st.write('With Bank Churners Data')
 
 st.subheader("Goal: To Predict Customer :red[Attrition].")
 
-joblibed_model = joblib.load('RandomForest_model.pkl')
+joblibed_model = joblib.load('model.pkl')
 dataframe = pd.read_csv('BankChurners.csv')
-joblibed_scaler = joblib.load('age_scaler.pkl')
+joblibed_age_scaler = joblib.load('age_scaler.pkl')
+joblibed_credit_limit_scaler = joblib.load('credit_scaler.pkl')
 clean_dataframe = pd.read_csv("clean_data.csv")
 
 
@@ -22,12 +23,12 @@ clean_dataframe = pd.read_csv("clean_data.csv")
 
 query = {
     'Customer_Age' : [0],
+    'Credit_Limit' : [0], 
     'Dependent_count' : [0], 
     'Months_on_book' : [0],
     'Total_Relationship_Count' : [0], 
     'Months_Inactive_12_mon' : [0],
        'Contacts_Count_12_mon' : [0], 
-       'Credit_Limit' : [0], 
        'Total_Revolving_Bal' : [0],
        'Avg_Open_To_Buy' : [0], 
        'Total_Amt_Chng_Q4_Q1' : [0], 
@@ -90,7 +91,7 @@ if page == 'Data':
     if data_button:
         with st.spinner("Transforming and Scaling entire dataset..."):
             time.sleep(3)
-            st.dataframe(clean_dataframe.drop(columns = ['Unnamed: 0', 'Customer_Age.1'], axis = 1))
+            st.dataframe(clean_dataframe.drop(columns = ['Unnamed: 0'], axis = 1))
 
         st.subheader("Great, now a model can be built!")
         
@@ -124,7 +125,7 @@ elif page == 'Prediction':
 
     # -------------------------------------------------------------------------------#
     age = col1.slider("Customer Age: ")
-    scaled_age = joblibed_scaler.transform(np.array(age).reshape(-1, 1))
+    scaled_age = joblibed_age_scaler.transform(np.array(age).reshape(-1, 1))
 
     query['Customer_Age'] = scaled_age
 
@@ -222,7 +223,8 @@ elif page == 'Prediction':
 
     #
     credit_limit = col2.slider("Credit Limit: (Credit limit of customer)")
-    query['Credit_Limit'] = credit_limit
+    scaled_limit = joblibed_credit_limit_scaler.transform(np.array(age).reshape(-1, 1))
+    query['Credit_Limit'] = scaled_limit
 
     #
     total_revolve = col2.slider("Total Revoling: (Total revolving balance of customer)")
@@ -254,6 +256,8 @@ elif page == 'Prediction':
 
     ######
 
+    print("Query:", len(query))
+
     result = int(joblibed_model.predict(query))
 
 
@@ -263,11 +267,12 @@ elif page == 'Prediction':
         result = "Customer Churn"
 
     prediction_button = st.button("Predict")
-    st.subheader("The Result of Prediction is: ")
-    if prediction_button and result == 'Customer Retention':
-        st.subheader(":green["+result+"]")
-    elif prediction_button:
-        st.subheader(":red[" + result+"]")
+    if prediction_button:
+        st.subheader("The Result of Prediction is: ")
+        if result == 'Customer Retention':
+            st.subheader(":green["+result+"]")
+        else:
+            st.subheader(":red[" + result+"]")
 
 
 
